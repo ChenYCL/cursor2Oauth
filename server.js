@@ -5,21 +5,12 @@ const { spawn } = require('child_process');
 
 const CURSOR_MODELS = [
   'auto',
-  'claude-4.5-sonnet', 'claude-4.5-sonnet-thinking',
-  'claude-4.5-opus-high', 'claude-4.5-opus-high-thinking',
-  'claude-4.6-opus-high', 'claude-4.6-opus-max', 'claude-4.6-opus-high-thinking', 'claude-4.6-opus-max-thinking',
-  'claude-4.6-sonnet-medium', 'claude-4.6-sonnet-medium-thinking',
-  'claude-opus-5-low', 'claude-opus-5-medium', 'claude-opus-5-high',
-  'claude-opus-5-thinking-low', 'claude-opus-5-thinking-medium', 'claude-opus-5-thinking-high', 'claude-opus-5-thinking-xhigh', 'claude-opus-5-thinking-max',
-  'claude-sonnet-5-low', 'claude-sonnet-5-medium', 'claude-sonnet-5-high', 'claude-sonnet-5-xhigh', 'claude-sonnet-5-max',
-  'claude-sonnet-5-thinking-low', 'claude-sonnet-5-thinking-medium', 'claude-sonnet-5-thinking-max',
-  'claude-fable-5-low', 'claude-fable-5-medium', 'claude-fable-5-high', 'claude-fable-5-xhigh', 'claude-fable-5-max',
-  'claude-fable-5-thinking-low', 'claude-fable-5-thinking-medium', 'claude-fable-5-thinking-max',
+  'claude-sonnet-5', 'claude-sonnet-5-low', 'claude-sonnet-5-medium', 'claude-sonnet-5-high', 'claude-sonnet-5-xhigh', 'claude-sonnet-5-max',
+  'claude-opus-5', 'claude-opus-5-low', 'claude-opus-5-medium', 'claude-opus-5-high',
+  'claude-fable-5', 'claude-fable-5-low', 'claude-fable-5-medium', 'claude-fable-5-high', 'claude-fable-5-xhigh', 'claude-fable-5-max',
   'claude-opus-4-8-low', 'claude-opus-4-8-medium', 'claude-opus-4-8-high', 'claude-opus-4-8-xhigh', 'claude-opus-4-8-max',
-  'claude-opus-4-8-thinking-low', 'claude-opus-4-8-thinking-medium', 'claude-opus-4-8-thinking-high', 'claude-opus-4-8-thinking-xhigh', 'claude-opus-4-8-thinking-max',
   'claude-opus-4-7-low', 'claude-opus-4-7-medium', 'claude-opus-4-7-high', 'claude-opus-4-7-xhigh', 'claude-opus-4-7-max',
-  'claude-opus-4-7-thinking-low', 'claude-opus-4-7-thinking-medium', 'claude-opus-4-7-thinking-high', 'claude-opus-4-7-thinking-xhigh', 'claude-opus-4-7-thinking-max',
-  'claude-4-sonnet', 'claude-4-sonnet-thinking',
+  'claude-4.6-opus-high', 'claude-4.6-opus-max',
   'gpt-5.3-codex-low', 'gpt-5.3-codex-low-fast', 'gpt-5.3-codex', 'gpt-5.3-codex-fast', 'gpt-5.3-codex-high', 'gpt-5.3-codex-high-fast', 'gpt-5.3-codex-xhigh', 'gpt-5.3-codex-xhigh-fast',
   'gpt-5.2', 'gpt-5.2-low', 'gpt-5.2-low-fast', 'gpt-5.2-fast', 'gpt-5.2-high', 'gpt-5.2-high-fast', 'gpt-5.2-xhigh', 'gpt-5.2-xhigh-fast',
   'gpt-5.1', 'gpt-5.1-low', 'gpt-5.1-high',
@@ -45,15 +36,21 @@ const MODEL_MAP = {
   'gpt-4-turbo': 'gpt-5.3-codex',
   'gpt-4o-mini': 'gpt-5.3-codex-low-fast',
   'gpt-3.5-turbo': 'gpt-5.3-codex-low-fast',
-  'claude-3-opus': 'claude-opus-5-high',
-  'claude-3-sonnet': 'claude-4.5-sonnet',
-  'claude-3.5-sonnet': 'claude-4.5-sonnet',
-  'claude-3.5-haiku': 'claude-4.5-sonnet',
-  'claude-3-opus-20240229': 'claude-opus-5-high',
-  'claude-3-sonnet-20240229': 'claude-4.5-sonnet',
-  'claude-3.5-sonnet-20241022': 'claude-4.5-sonnet',
-  'claude-3.5-haiku-20241022': 'claude-4.5-sonnet',
-  'claude-4-5-sonnet-20250601': 'claude-4.5-sonnet',
+  'claude-3-opus': 'claude-opus-5',
+  'claude-3-opus-20240229': 'claude-opus-5',
+  'claude-3-sonnet': 'claude-sonnet-5',
+  'claude-3-sonnet-20240229': 'claude-sonnet-5',
+  'claude-3.5-sonnet': 'claude-sonnet-5',
+  'claude-3.5-sonnet-20241022': 'claude-sonnet-5',
+  'claude-3.5-haiku': 'claude-sonnet-5',
+  'claude-3.5-haiku-20241022': 'claude-sonnet-5',
+  'claude-4-5-sonnet-20250601': 'claude-sonnet-5',
+  'claude-4.5-sonnet': 'claude-sonnet-5',
+  'claude-4-sonnet': 'claude-sonnet-5',
+  'claude-sonnet-4-5': 'claude-sonnet-5',
+  'claude-sonnet-4-5-20250929': 'claude-sonnet-5',
+  'claude-haiku-4-5': 'claude-sonnet-5',
+  'claude-haiku-4-5-20251001': 'claude-sonnet-5',
   'gemini-pro': 'gemini-3.1-pro',
   'gemini-2.0-flash': 'gemini-3.6-flash-high',
   'gemini-2.5-pro': 'gemini-3.1-pro',
@@ -61,20 +58,134 @@ const MODEL_MAP = {
   'deepseek-chat': 'gpt-5.3-codex-low',
 };
 
-const DEFAULT_MODEL = 'claude-4.5-sonnet';
+const DEFAULT_MODEL = 'claude-sonnet-5';
 
 const PORT = parseInt(process.env.PORT || '3000');
 const HOST = process.env.HOST || '0.0.0.0';
 const API_KEY = process.env.API_KEY || '';
 
-function resolveModel(requested) {
-  if (!requested) return DEFAULT_MODEL;
-  return MODEL_MAP[requested] || requested;
+function stripThinking(id) {
+  return String(id || '')
+    .replace(/-thinking-(none|low|medium|high|xhigh|max)(-fast)?$/i, (_, effort, fast) => `-${effort}${fast || ''}`)
+    .replace(/-thinking(-fast)?$/i, (_, fast) => fast || '');
+}
+
+function upgradeLegacySonnet(id) {
+  const x = String(id || '').toLowerCase();
+  if (
+    x === 'claude-4.5-sonnet' ||
+    x === 'claude-4-sonnet' ||
+    x.startsWith('claude-4.6-sonnet') ||
+    x.startsWith('claude-sonnet-4-5') ||
+    x.startsWith('claude-sonnet-4-6') ||
+    x.includes('3.5-sonnet') ||
+    x.includes('3-sonnet') ||
+    x === 'claude-4-5-sonnet-20250601' ||
+    x === 'claude-haiku-4-5' ||
+    x === 'claude-haiku-4-5-20251001' ||
+    x.includes('3.5-haiku') ||
+    x.includes('3-5-haiku')
+  ) {
+    return 'claude-sonnet-5';
+  }
+  return id;
+}
+
+function parseFamilyEffort(id) {
+  const raw = String(id || '');
+  const hadThinking = /thinking/i.test(raw);
+  let s = upgradeLegacySonnet(stripThinking(raw));
+  const m = s.match(/^(.*?)-(none|low|medium|high|xhigh|max|extra-high)(-fast)?$/i);
+  if (m) {
+    return {
+      family: m[1],
+      effort: m[2].toLowerCase() === 'extra-high' ? 'xhigh' : m[2].toLowerCase(),
+      fast: Boolean(m[3]),
+      hadThinking,
+    };
+  }
+  return { family: s, effort: null, fast: false, hadThinking };
+}
+
+function budgetToEffort(budget) {
+  const n = Number(budget) || 0;
+  if (n >= 32000) return 'max';
+  if (n >= 16000) return 'xhigh';
+  if (n >= 8000) return 'high';
+  if (n >= 4000) return 'medium';
+  if (n > 0) return 'low';
+  return 'high';
+}
+
+function parseClientThinking(body) {
+  const t = body && body.thinking;
+  if (t && typeof t === 'object') {
+    const typ = String(t.type || '').toLowerCase();
+    if (typ === 'disabled' || typ === 'none') {
+      return { thinking: false, effort: 'high' };
+    }
+    return { thinking: true, effort: budgetToEffort(t.budget_tokens) };
+  }
+  const re = String((body && (body.reasoning_effort || body.reasoningEffort)) || '').toLowerCase();
+  if (['low', 'medium', 'high', 'xhigh', 'max'].includes(re)) {
+    return { thinking: true, effort: re };
+  }
+  // 编程客户端默认开思考；力度 high。不想思考时在请求里传 thinking.type=disabled。
+  return { thinking: true, effort: 'high' };
+}
+
+function claudeCursorId(family, thinking, effort, fast) {
+  const e = effort || 'high';
+  const fastSuf = fast ? '-fast' : '';
+  if (thinking) {
+    if (family === 'claude-opus-5' || family === 'claude-sonnet-5' || family === 'claude-fable-5'
+      || family.startsWith('claude-opus-4-') || family.startsWith('claude-4.')) {
+      if (family === 'claude-fable-5' && e === 'xhigh') return `claude-fable-5-thinking-xhigh${fastSuf}`;
+      if (family === 'claude-sonnet-5' && e === 'xhigh') return `claude-sonnet-5-thinking-xhigh${fastSuf}`;
+      return `${family}-thinking-${e}${fastSuf}`;
+    }
+  }
+  if (family === 'claude-opus-5' && (e === 'xhigh' || e === 'max')) {
+    return thinking ? `claude-opus-5-thinking-${e}${fastSuf}` : `claude-opus-5-high${fastSuf}`;
+  }
+  return `${family}-${e}${fastSuf}`;
+}
+
+function resolveModel(requested, body) {
+  if (!requested) requested = DEFAULT_MODEL;
+  const mapped = MODEL_MAP[requested] || requested;
+  const parsed = parseFamilyEffort(mapped);
+  const client = parseClientThinking(body || {});
+  const effort = parsed.effort || client.effort || 'high';
+  const thinking = parsed.hadThinking || client.thinking;
+  if (!String(parsed.family).startsWith('claude-')) {
+    return parsed.effort ? `${parsed.family}-${parsed.effort}${parsed.fast ? '-fast' : ''}` : parsed.family;
+  }
+  if (parsed.family === 'claude-sonnet-5' && !parsed.effort && thinking) {
+    return claudeCursorId('claude-sonnet-5', true, effort, parsed.fast);
+  }
+  return claudeCursorId(parsed.family, thinking, effort, parsed.fast);
+}
+
+function classifyAgentError(errBuf, code, resultText) {
+  const err = (errBuf || '').trim();
+  const lower = err.toLowerCase();
+  if (lower.includes('authentication required') || lower.includes('not logged in') || lower.includes('not authenticated')) {
+    return { status: 401, error: 'Cursor CLI not authenticated. Run agent login or set CURSOR_API_KEY.' };
+  }
+  if (code && code !== 0) {
+    return { status: 502, error: err || `cursor-agent exited with code ${code}` };
+  }
+  if (!resultText && err && !lower.includes('warning') && !lower.includes('warn')) {
+    return { status: 502, error: err };
+  }
+  return null;
 }
 
 function spawnCursorAgent(model, prompt) {
   const child = spawn('cursor-agent', [
-    '--print', '--model', model,
+    '--print', '--trust', '--mode', 'ask',
+    '--model', model,
     '--output-format', 'stream-json', prompt,
   ], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env } });
 
@@ -119,6 +230,7 @@ app.use(morgan('short'));
 app.use(express.json({ limit: '10mb' }));
 
 app.use((req, res, next) => {
+  if (req.path === '/health') return next();
   if (API_KEY) {
     const auth = req.headers.authorization;
     if (!auth || !auth.startsWith('Bearer ') || auth.slice(7) !== API_KEY) {
@@ -145,7 +257,8 @@ app.post('/v1/chat/completions', (req, res) => {
     const prompt = extractPrompt(messages);
     if (!prompt) return res.status(400).json({ error: 'user message required' });
 
-    const cursorModel = resolveModel(model);
+    const cursorModel = resolveModel(model, req.body);
+    console.log('[model]', model, '->', cursorModel);
 
     if (stream) {
       res.setHeader('Content-Type', 'text/event-stream');
@@ -157,6 +270,7 @@ app.post('/v1/chat/completions', (req, res) => {
       const child = spawnCursorAgent(cursorModel, prompt);
       let finished = false;
       let fullContent = '';
+      let errBuf = '';
 
       const cleanup = () => {
         if (finished) return;
@@ -222,10 +336,22 @@ app.post('/v1/chat/completions', (req, res) => {
 
       child.stderr.on('data', (c) => {
         const t = c.toString();
+        errBuf += t;
         if (t.includes('Warning') || t.includes('warn')) console.warn('[cursor-agent]', t);
       });
 
-      child.on('close', () => {
+      child.on('close', (code) => {
+        const fail = classifyAgentError(errBuf, code, fullContent);
+        if (fail && !fullContent) {
+          if (finished || res.writableEnded) return;
+          finished = true;
+          try {
+            res.write(`data: ${JSON.stringify({ error: { message: fail.error, type: 'api_error' } })}\n\n`);
+            res.write('data: [DONE]\n\n');
+            res.end();
+          } catch (e) { /* ignore */ }
+          return;
+        }
         end();
       });
 
@@ -244,9 +370,13 @@ app.post('/v1/chat/completions', (req, res) => {
     child.stdout.on('data', (c) => { output += c.toString(); });
     child.stderr.on('data', (c) => { errBuf += c.toString(); });
 
-    child.on('close', () => {
+    child.on('close', (code) => {
       if (errBuf.includes('Warning') || errBuf.includes('warn')) console.warn('[cursor-agent]', errBuf);
       const result = parseCursorOutput(output.trim().split('\n'));
+      const fail = classifyAgentError(errBuf, code, result);
+      if (fail) {
+        return res.status(fail.status).json({ error: { message: fail.error, type: 'api_error' } });
+      }
       res.json({
         id: `chatcmpl-${Date.now()}`,
         object: 'chat.completion',
@@ -275,7 +405,8 @@ app.post('/v1/messages', (req, res) => {
     const prompt = extractPrompt(messages);
     if (!prompt) return res.status(400).json({ error: 'user message required' });
 
-    const cursorModel = resolveModel(model);
+    const cursorModel = resolveModel(model, req.body);
+    console.log('[model]', model, '->', cursorModel);
     const msgId = `msg_${Date.now()}`;
 
     if (stream) {
@@ -289,6 +420,7 @@ app.post('/v1/messages', (req, res) => {
       let finished = false;
       let fullContent = '';
       let started = false;
+      let errBuf = '';
 
       const cleanup = () => {
         if (finished) return;
@@ -362,10 +494,24 @@ app.post('/v1/messages', (req, res) => {
 
       child.stderr.on('data', (c) => {
         const t = c.toString();
+        errBuf += t;
         if (t.includes('Warning') || t.includes('warn')) console.warn('[cursor-agent]', t);
       });
 
-      child.on('close', () => { end(); });
+      child.on('close', (code) => {
+        const fail = classifyAgentError(errBuf, code, fullContent);
+        if (fail && !fullContent) {
+          if (finished || res.writableEnded) return;
+          finished = true;
+          try {
+            res.write(`event: error\ndata: ${JSON.stringify({ type: 'error', error: { type: 'api_error', message: fail.error } })}\n\n`);
+            res.write('data: [DONE]\n\n');
+            res.end();
+          } catch (e) { /* ignore */ }
+          return;
+        }
+        end();
+      });
       child.on('error', (err) => { console.error('[cursor-agent]', err); end(); });
 
       return;
@@ -378,9 +524,13 @@ app.post('/v1/messages', (req, res) => {
     child.stdout.on('data', (c) => { output += c.toString(); });
     child.stderr.on('data', (c) => { errBuf += c.toString(); });
 
-    child.on('close', () => {
+    child.on('close', (code) => {
       if (errBuf.includes('Warning') || errBuf.includes('warn')) console.warn('[cursor-agent]', errBuf);
       const result = parseCursorOutput(output.trim().split('\n'));
+      const fail = classifyAgentError(errBuf, code, result);
+      if (fail) {
+        return res.status(fail.status).json({ error: { message: fail.error, type: 'api_error' } });
+      }
       res.json({
         id: msgId, type: 'message', role: 'assistant',
         content: [{ type: 'text', text: result || '' }],

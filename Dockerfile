@@ -6,18 +6,21 @@ RUN curl https://cursor.com/install -fsS | bash
 
 ENV PATH="/root/.local/bin:${PATH}"
 
-RUN agent --version
+RUN agent --version \
+  && if [ ! -e /root/.local/bin/cursor-agent ]; then ln -sf /root/.local/bin/agent /root/.local/bin/cursor-agent; fi \
+  && cursor-agent --version
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install --production
+RUN npm install --omit=dev
 
-COPY server.js ./
+COPY server.js docker-entrypoint.sh ./
+RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 8010
 
 ENV PORT=8010
 ENV HOST=0.0.0.0
 
-CMD ["node", "server.js"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
