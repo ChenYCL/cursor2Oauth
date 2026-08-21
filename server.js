@@ -3,6 +3,42 @@ const cors = require('cors');
 const morgan = require('morgan');
 const { spawn } = require('child_process');
 
+const CURSOR_MODELS = [
+  'auto',
+  'claude-4.5-sonnet', 'claude-4.5-sonnet-thinking',
+  'claude-4.5-opus-high', 'claude-4.5-opus-high-thinking',
+  'claude-4.6-opus-high', 'claude-4.6-opus-max', 'claude-4.6-opus-high-thinking', 'claude-4.6-opus-max-thinking',
+  'claude-4.6-sonnet-medium', 'claude-4.6-sonnet-medium-thinking',
+  'claude-opus-5-low', 'claude-opus-5-medium', 'claude-opus-5-high',
+  'claude-opus-5-thinking-low', 'claude-opus-5-thinking-medium', 'claude-opus-5-thinking-high', 'claude-opus-5-thinking-xhigh', 'claude-opus-5-thinking-max',
+  'claude-sonnet-5-low', 'claude-sonnet-5-medium', 'claude-sonnet-5-high', 'claude-sonnet-5-xhigh', 'claude-sonnet-5-max',
+  'claude-sonnet-5-thinking-low', 'claude-sonnet-5-thinking-medium', 'claude-sonnet-5-thinking-max',
+  'claude-fable-5-low', 'claude-fable-5-medium', 'claude-fable-5-high', 'claude-fable-5-xhigh', 'claude-fable-5-max',
+  'claude-fable-5-thinking-low', 'claude-fable-5-thinking-medium', 'claude-fable-5-thinking-max',
+  'claude-opus-4-8-low', 'claude-opus-4-8-medium', 'claude-opus-4-8-high', 'claude-opus-4-8-xhigh', 'claude-opus-4-8-max',
+  'claude-opus-4-8-thinking-low', 'claude-opus-4-8-thinking-medium', 'claude-opus-4-8-thinking-high', 'claude-opus-4-8-thinking-xhigh', 'claude-opus-4-8-thinking-max',
+  'claude-opus-4-7-low', 'claude-opus-4-7-medium', 'claude-opus-4-7-high', 'claude-opus-4-7-xhigh', 'claude-opus-4-7-max',
+  'claude-opus-4-7-thinking-low', 'claude-opus-4-7-thinking-medium', 'claude-opus-4-7-thinking-high', 'claude-opus-4-7-thinking-xhigh', 'claude-opus-4-7-thinking-max',
+  'claude-4-sonnet', 'claude-4-sonnet-thinking',
+  'gpt-5.3-codex-low', 'gpt-5.3-codex-low-fast', 'gpt-5.3-codex', 'gpt-5.3-codex-fast', 'gpt-5.3-codex-high', 'gpt-5.3-codex-high-fast', 'gpt-5.3-codex-xhigh', 'gpt-5.3-codex-xhigh-fast',
+  'gpt-5.2', 'gpt-5.2-low', 'gpt-5.2-low-fast', 'gpt-5.2-fast', 'gpt-5.2-high', 'gpt-5.2-high-fast', 'gpt-5.2-xhigh', 'gpt-5.2-xhigh-fast',
+  'gpt-5.1', 'gpt-5.1-low', 'gpt-5.1-high',
+  'gpt-5.4-low', 'gpt-5.4-medium', 'gpt-5.4-medium-fast', 'gpt-5.4-high', 'gpt-5.4-high-fast', 'gpt-5.4-xhigh', 'gpt-5.4-xhigh-fast',
+  'gpt-5.4-mini-none', 'gpt-5.4-mini-low', 'gpt-5.4-mini-medium', 'gpt-5.4-mini-high', 'gpt-5.4-mini-xhigh',
+  'gpt-5.4-nano-none', 'gpt-5.4-nano-low', 'gpt-5.4-nano-medium', 'gpt-5.4-nano-high', 'gpt-5.4-nano-xhigh',
+  'gpt-5.5-none', 'gpt-5.5-low', 'gpt-5.5-medium', 'gpt-5.5-high', 'gpt-5.5-extra-high',
+  'gpt-5.6-sol-none', 'gpt-5.6-sol-low', 'gpt-5.6-sol-medium', 'gpt-5.6-sol-high', 'gpt-5.6-sol-xhigh', 'gpt-5.6-sol-max',
+  'gpt-5.6-luna-none', 'gpt-5.6-luna-low', 'gpt-5.6-luna-medium', 'gpt-5.6-luna-high', 'gpt-5.6-luna-xhigh', 'gpt-5.6-luna-max',
+  'gpt-5.6-terra-none', 'gpt-5.6-terra-low', 'gpt-5.6-terra-medium', 'gpt-5.6-terra-high', 'gpt-5.6-terra-xhigh', 'gpt-5.6-terra-max',
+  'gpt-5-mini',
+  'gemini-3.1-pro', 'gemini-3-flash', 'gemini-3.5-flash', 'gemini-3.6-flash-minimal', 'gemini-3.6-flash-low', 'gemini-3.6-flash-medium', 'gemini-3.6-flash-high', 'gemini-3.7-flash-low', 'gemini-3.7-flash-medium', 'gemini-3.7-flash-high',
+  'cursor-grok-4.5-low', 'cursor-grok-4.5-medium', 'cursor-grok-4.5-high',
+  'cursor-grok-4.6-low', 'cursor-grok-4.6-medium', 'cursor-grok-4.6-high', 'cursor-grok-4.6-xhigh',
+  'kimi-k3-low', 'kimi-k3-high', 'kimi-k3-max', 'kimi-k2.7-code',
+  'glm-5.2-high', 'glm-5.2-max',
+  'composer-2.5', 'composer-2.5-fast',
+];
+
 const MODEL_MAP = {
   'gpt-4': 'gpt-5.3-codex',
   'gpt-4o': 'gpt-5.3-codex',
@@ -39,8 +75,14 @@ function resolveModel(requested) {
 function spawnCursorAgent(model, prompt) {
   const child = spawn('cursor-agent', [
     '--print', '--model', model,
-    '--output-format', 'stream-json', '--stream-partial-output', prompt,
+    '--output-format', 'stream-json', prompt,
   ], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env } });
+
+  setTimeout(() => {
+    if (!child.killed) {
+      child.kill('SIGTERM');
+    }
+  }, 180000);
   return child;
 }
 
@@ -89,11 +131,11 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.get('/v1/models', (req, res) => {
-  const models = [
-    ...Object.keys(MODEL_MAP).map(k => ({ id: k, object: 'model', created: Math.floor(Date.now() / 1000), owned_by: 'cursor' })),
-    { id: DEFAULT_MODEL, object: 'model', created: Math.floor(Date.now() / 1000), owned_by: 'cursor' },
-  ];
-  res.json({ object: 'list', data: models });
+  const now = Math.floor(Date.now() / 1000);
+  const data = CURSOR_MODELS.map(id => ({
+    id, object: 'model', created: now, owned_by: 'cursor',
+  }));
+  res.json({ object: 'list', data });
 });
 
 app.post('/v1/chat/completions', (req, res) => {
@@ -113,22 +155,41 @@ app.post('/v1/chat/completions', (req, res) => {
       res.flushHeaders();
 
       const child = spawnCursorAgent(cursorModel, prompt);
-      let aborted = false;
+      let finished = false;
       let fullContent = '';
 
-      req.on('close', () => { aborted = true; child.kill('SIGTERM'); });
+      const cleanup = () => {
+        if (finished) return;
+        finished = true;
+        if (!child.killed) child.kill('SIGTERM');
+      };
+
+      res.on('close', cleanup);
 
       const send = (content, finishReason) => {
-        if (aborted) return;
+        if (finished) return;
         try {
-          res.write(`data: ${JSON.stringify({
-            id: `chatcmpl-${Date.now()}`,
-            object: 'chat.completion.chunk',
-            created: Math.floor(Date.now() / 1000),
-            model: cursorModel,
-            choices: [{ index: 0, delta: content ? { content } : {}, finish_reason: finishReason || null }],
-          })}\n\n`);
-        } catch (e) { aborted = true; child.kill(); }
+          if (!res.writableEnded) {
+            res.write(`data: ${JSON.stringify({
+              id: `chatcmpl-${Date.now()}`,
+              object: 'chat.completion.chunk',
+              created: Math.floor(Date.now() / 1000),
+              model: cursorModel,
+              choices: [{ index: 0, delta: content ? { content } : {}, finish_reason: finishReason || null }],
+            })}\n\n`);
+          }
+        } catch (e) { cleanup(); }
+      };
+
+      const end = () => {
+        if (finished) return;
+        finished = true;
+        try {
+          if (!res.writableEnded) {
+            res.write('data: [DONE]\n\n');
+            res.end();
+          }
+        } catch (e) { /* ignore */ }
       };
 
       let buf = '';
@@ -153,7 +214,7 @@ app.post('/v1/chat/completions', (req, res) => {
             if (p.type === 'result') {
               if (p.result && !fullContent) { fullContent = p.result; send(p.result, null); }
               send(null, 'stop');
-              try { res.write('data: [DONE]\n\n'); res.end(); } catch (e) { /* ignore */ }
+              end();
             }
           } catch (e) { /* skip */ }
         }
@@ -165,14 +226,12 @@ app.post('/v1/chat/completions', (req, res) => {
       });
 
       child.on('close', () => {
-        if (!aborted) {
-          try { res.write('data: [DONE]\n\n'); res.end(); } catch (e) { /* ignore */ }
-        }
+        end();
       });
 
       child.on('error', (err) => {
         console.error('[cursor-agent]', err);
-        if (!aborted) { try { res.end(); } catch (e) { /* ignore */ } }
+        end();
       });
 
       return;
@@ -227,17 +286,36 @@ app.post('/v1/messages', (req, res) => {
       res.flushHeaders();
 
       const child = spawnCursorAgent(cursorModel, prompt);
-      let aborted = false;
+      let finished = false;
       let fullContent = '';
       let started = false;
 
-      req.on('close', () => { aborted = true; child.kill('SIGTERM'); });
+      const cleanup = () => {
+        if (finished) return;
+        finished = true;
+        if (!child.killed) child.kill('SIGTERM');
+      };
+
+      res.on('close', cleanup);
 
       const sendEvent = (event, data) => {
-        if (aborted) return;
+        if (finished) return;
         try {
-          res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-        } catch (e) { aborted = true; child.kill(); }
+          if (!res.writableEnded) {
+            res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+          }
+        } catch (e) { cleanup(); }
+      };
+
+      const end = () => {
+        if (finished) return;
+        finished = true;
+        try {
+          if (!res.writableEnded) {
+            res.write('data: [DONE]\n\n');
+            res.end();
+          }
+        } catch (e) { /* ignore */ }
       };
 
       let buf = '';
@@ -276,7 +354,7 @@ app.post('/v1/messages', (req, res) => {
                 sendEvent('content_block_delta', { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: p.result } });
               }
               sendEvent('message_delta', { type: 'message_delta', delta: { stop_reason: 'end_turn', stop_sequence: null }, usage: { output_tokens: 0, input_tokens: 0 } });
-              try { res.write('data: [DONE]\n\n'); res.end(); } catch (e) { /* ignore */ }
+              end();
             }
           } catch (e) { /* skip */ }
         }
@@ -287,14 +365,8 @@ app.post('/v1/messages', (req, res) => {
         if (t.includes('Warning') || t.includes('warn')) console.warn('[cursor-agent]', t);
       });
 
-      child.on('close', () => {
-        if (!aborted) { try { res.write('data: [DONE]\n\n'); res.end(); } catch (e) { /* ignore */ } }
-      });
-
-      child.on('error', (err) => {
-        console.error('[cursor-agent]', err);
-        if (!aborted) { try { res.end(); } catch (e) { /* ignore */ } }
-      });
+      child.on('close', () => { end(); });
+      child.on('error', (err) => { console.error('[cursor-agent]', err); end(); });
 
       return;
     }
