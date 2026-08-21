@@ -15,7 +15,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install --omit=dev
 
-COPY server.js docker-entrypoint.sh ./
+COPY server.js cursor-direct.js docker-entrypoint.sh ./
 RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 8010

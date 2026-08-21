@@ -1,4 +1,4 @@
-const http2 = require('http2');
+const http2 = require('node:http2');
 const { execSync } = require('child_process');
 const path = require('path');
 const os = require('os');
@@ -265,6 +265,7 @@ function resolveAccessToken() {
   const xdg = process.env.XDG_CONFIG_HOME;
   if (xdg) {
     const token = scanForToken(path.join(xdg, 'cursor-agent'))
+      || scanForToken(path.join(xdg, 'cursor'))
       || scanForToken(xdg);
     if (token) return token;
   }
