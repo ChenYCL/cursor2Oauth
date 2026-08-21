@@ -44,7 +44,9 @@ deploy_docker() {
     -p "$PORT:8010" \
     -e PORT=8010 \
     -e HOST=0.0.0.0 \
+    -e XDG_CONFIG_HOME=/root/.cursor/xdg-config \
     ${API_KEY:+-e API_KEY="$API_KEY"} \
+    ${CURSOR_API_KEY:+-e CURSOR_API_KEY="$CURSOR_API_KEY"} \
     -v "$HOME/.cursor:/root/.cursor" \
     cursor2oauth:latest
 

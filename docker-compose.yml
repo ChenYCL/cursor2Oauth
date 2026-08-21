@@ -1,18 +1,24 @@
-version: '3.8'
-
 services:
   cursor2oauth:
     build: .
+    image: cursor2oauth:latest
     container_name: cursor2oauth
     ports:
       - "8010:8010"
     environment:
-      - PORT=8010
-      - HOST=0.0.0.0
-      - API_KEY=${API_KEY:-}
+      PORT: "8010"
+      HOST: "0.0.0.0"
+      API_KEY: ${API_KEY:-}
+      CURSOR_API_KEY: ${CURSOR_API_KEY:-}
+      # Cursor CLI stores access/refresh tokens under $XDG_CONFIG_HOME, not ~/.cursor.
+      # Keep it inside the mounted ~/.cursor dir so rebuilds do not drop login.
+      XDG_CONFIG_HOME: /root/.cursor/xdg-config
     volumes:
-      - cursor-data:/root/.cursor
+      - ${HOME}/.cursor:/root/.cursor
     restart: unless-stopped
-
-volumes:
-  cursor-data:
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8010/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s

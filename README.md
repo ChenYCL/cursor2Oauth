@@ -6,7 +6,7 @@
 
 - **OpenAI-compatible** — `/v1/chat/completions` + `/v1/models`, works with any OpenAI SDK
 - **Anthropic-compatible** — `/v1/messages` with SSE streaming, works with Claude Code
-- **142 Cursor models** — Claude Opus 5, GPT-5.3 Codex, Gemini 3.1 Pro, Grok, Kimi, GLM, and more
+- **Cursor models without thinking-* clutter** — `/v1/models` exposes clean names (`claude-sonnet-5`, `claude-opus-5`). Thinking is mapped internally (default `thinking-high`) from the client's `thinking` / `reasoning_effort` fields.
 - **Streaming** — Full SSE support for both OpenAI and Anthropic formats
 - **Zero degradation** — Uses `cursor-agent` CLI as backend (same models, same prompts, same quality)
 - **No IDE required** — Standalone CLI, works on any server
@@ -39,12 +39,12 @@ PORT=8010 node server.js
 # OpenAI format
 curl http://localhost:8010/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"claude-4.5-sonnet","messages":[{"role":"user","content":"Hello"}]}'
+  -d '{"model":"claude-sonnet-5","messages":[{"role":"user","content":"Hello"}]}'
 
 # Anthropic format
 curl http://localhost:8010/v1/messages \
   -H "Content-Type: application/json" \
-  -d '{"model":"claude-4.5-sonnet","messages":[{"role":"user","content":"Hello"}],"max_tokens":100}'
+  -d '{"model":"claude-sonnet-5","messages":[{"role":"user","content":"Hello"}],"max_tokens":100}'
 
 # List models
 curl http://localhost:8010/v1/models
@@ -62,8 +62,12 @@ docker run -d \
   --name cursor2oauth \
   --restart unless-stopped \
   -p 8010:8010 \
+  -e XDG_CONFIG_HOME=/root/.cursor/xdg-config \
   -v ~/.cursor:/root/.cursor \
   cursor2oauth
+
+# Headless login (prints a URL, tokens persist in ~/.cursor/xdg-config)
+docker exec -e NO_OPEN_BROWSER=1 -it cursor2oauth agent login
 ```
 
 ## API
@@ -80,6 +84,7 @@ docker run -d \
 | Endpoint | Method | Description |
 |---|---|---|
 | `/v1/messages` | POST | Messages API (stream + non-stream) |
+| `/health` | GET | Liveness probe (no auth) |
 
 ### Authentication
 
@@ -96,11 +101,13 @@ Common model names are automatically mapped to Cursor models:
 | Requested Model | Cursor Model |
 |---|---|
 | `gpt-4`, `gpt-4o` | `gpt-5.3-codex` |
-| `claude-3-opus` | `claude-opus-5-high` |
-| `claude-3.5-sonnet` | `claude-4.5-sonnet` |
+| `claude-3-opus` | `claude-opus-5` |
+| `claude-3.5-sonnet`, `claude-4.5-sonnet`, `claude-sonnet-4-5` | `claude-sonnet-5` (internally `claude-sonnet-5-thinking-high` unless `thinking` is disabled) |
 | `gemini-pro` | `gemini-3.1-pro` |
 
-You can also pass Cursor model IDs directly (e.g. `claude-opus-5-thinking-high`, `gpt-5.3-codex-xhigh`).
+Default model is `claude-sonnet-5`. Thinking is **not** part of the public model name: the proxy maps Anthropic `thinking` / OpenAI `reasoning_effort` onto Cursor's `-thinking-*` IDs. Default is thinking + effort `high`. Pass `"thinking":{"type":"disabled"}` to turn it off.
+
+You can still pass Cursor IDs directly (e.g. `claude-sonnet-5-max`, `gpt-5.3-codex-xhigh`).
 
 ## Remote Deploy
 
@@ -122,6 +129,8 @@ rsync -av ~/.cursor/ user@server:~/.cursor/
 | `PORT` | `3000` | Listen port |
 | `HOST` | `0.0.0.0` | Listen address |
 | `API_KEY` | (empty) | Enable Bearer token auth |
+| `CURSOR_API_KEY` | (empty) | Cursor user API key (skips `agent login`) |
+| `XDG_CONFIG_HOME` | (unset) | Set to `/root/.cursor/xdg-config` in Docker so login survives rebuilds |
 
 ## License
 
