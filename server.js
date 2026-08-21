@@ -132,7 +132,7 @@ function parseClientThinking(body) {
     return { thinking: true, effort: re };
   }
   // 编程客户端默认开思考；力度 high。不想思考时在请求里传 thinking.type=disabled。
-  return { thinking: true, effort: 'high' };
+  return { thinking: true, effort: 'xhigh' };
 }
 
 function claudeCursorId(family, thinking, effort, fast) {
@@ -185,7 +185,7 @@ function classifyAgentError(errBuf, code, resultText) {
 
 function spawnCursorAgent(model, prompt) {
   const child = spawn('cursor-agent', [
-    '--print', '--trust', '--mode', 'ask',
+    '--print', '--trust',
     '--model', model,
     '--output-format', 'stream-json', prompt,
   ], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env } });
