@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const { spawn } = require('child_process');
+const { getUsage } = require('./cursor-direct');
 
 const CURSOR_MODELS = [
   'auto',
@@ -241,6 +242,29 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+/**
+ * 当前计费周期的订阅用量。
+ *
+ * 给 ccLoad 客户端的「订阅用量」页用：ccLoad 内核只会向 Codex/Anthropic/
+ * Antigravity/xAI/Z.ai 这 5 家 OAuth 渠道采样额度，Cursor 在它眼里是普通的
+ * api_key 渠道，没有任何位置能拿到额度 —— 所以由这边直接问 Cursor 再吐出来。
+ *
+ * 返回里的 `windows[]` 形状对齐内核的 `oauth_usage.windows[]`，客户端那一页
+ * 不用为 Cursor 单写一套渲染。
+ *
+ * 不缓存：这是人点「刷新」才调的接口，频率极低；缓存反而会让用户刚跑完一轮
+ * 大任务、回来看还是旧数字。
+ */
+app.get('/usage', async (req, res) => {
+  try {
+    res.json(await getUsage());
+  } catch (err) {
+    // 400 而不是 500：绝大多数失败是「没登录 / 没给 token」，属于调用方能自己
+    // 修好的事，报 500 会让人去查我们的服务是不是挂了。
+    res.status(400).json({ error: String(err.message || err) });
+  }
+});
 
 app.get('/v1/models', (req, res) => {
   const now = Math.floor(Date.now() / 1000);

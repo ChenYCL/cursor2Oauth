@@ -86,6 +86,44 @@ docker exec -e NO_OPEN_BROWSER=1 -it cursor2oauth agent login
 | `/v1/messages` | POST | Messages API (stream + non-stream) |
 | `/health` | GET | Liveness probe (no auth) |
 
+### Subscription usage
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/usage` | GET | Current billing-period usage (requires auth if `API_KEY` is set) |
+
+Calls Cursor's `aiserver.v1.DashboardService/GetCurrentPeriodUsage` and normalises
+the reply. The `windows[]` shape matches ccLoad's `oauth_usage.windows[]`, so the
+ccLoad desktop client can render it next to the other providers.
+
+```bash
+curl -s localhost:3000/usage | jq '.windows[0], .display_message'
+```
+
+```json
+{
+  "limit_name": "included",
+  "used_percent": 90.06,
+  "remaining_percent": 9.94,
+  "reset_at": 1789181874,
+  "limit_usd": 400,
+  "spend_usd": 360.25,
+  "remaining_usd": 39.75
+}
+"You've used 90% of your included usage"
+```
+
+The headline number is `totalSpend / limit`, which is what Cursor's own UI shows.
+Do **not** use the `totalPercentUsed` field for that — it is a different metric
+(measured 14.41 while the same response said "You've used 90%").
+
+**Token resolution**, in order:
+
+1. `CURSOR_ACCESS_TOKEN` env var — the only one guaranteed to work in Docker.
+2. `$XDG_CONFIG_HOME` — scans JSON there for an `accessToken`-ish field, so a
+   logged-in Cursor CLI in the container is picked up automatically.
+3. The desktop app's `state.vscdb` — most convenient for local development.
+
 ### Authentication
 
 Set `API_KEY` env var to enable Bearer token auth:
